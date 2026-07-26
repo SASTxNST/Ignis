@@ -1,0 +1,16 @@
+{
+  "name": "ignis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ignis — interactive rocket launch simulation platform",
+  "workspaces": [
+    "physics-engine",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "validate:physics": "npm run validate --workspace=physics-engine",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend"
+  }
+}

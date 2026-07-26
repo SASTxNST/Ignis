@@ -1,0 +1,161 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0b0e14;
+  color: #e6ebf5;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #1c2534;
+}
+
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #ff5a36;
+}
+
+.app-subtitle {
+  font-size: 13px;
+  color: #7d8aa8;
+}
+
+.app-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  gap: 1px;
+  background: #1c2534;
+  overflow: hidden;
+}
+
+.mission-control,
+.telemetry-dashboard,
+.scene-panel {
+  background: #0b0e14;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.mission-control h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7d8aa8;
+  margin-top: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #7d8aa8;
+}
+
+.field select {
+  background: #141a26;
+  color: #e6ebf5;
+  border: 1px solid #26314a;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.launch-button {
+  width: 100%;
+  padding: 12px;
+  background: #ff5a36;
+  color: #0b0e14;
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.launch-button:disabled {
+  background: #3a3f4d;
+  color: #7d8aa8;
+  cursor: not-allowed;
+}
+
+.playback {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playback button {
+  padding: 8px;
+  background: #141a26;
+  color: #e6ebf5;
+  border: 1px solid #26314a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.scene-panel {
+  padding: 0;
+}
+
+.readout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.readout {
+  background: #141a26;
+  border: 1px solid #26314a;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.readout-label {
+  font-size: 11px;
+  color: #7d8aa8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.readout-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e6ebf5;
+}
+
+.readout-unit {
+  font-size: 11px;
+  color: #7d8aa8;
+  font-weight: 400;
+}
+
+.chart-block {
+  margin-bottom: 16px;
+}
+
+.chart-title {
+  font-size: 11px;
+  color: #7d8aa8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
