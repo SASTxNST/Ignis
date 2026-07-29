@@ -1,5 +1,6 @@
 import { FIXED_TIMESTEP_S, G0 } from "./constants";
 import { computeForces } from "./forces";
+import { guidanceComputer } from "./guidance";
 import { rk4Step } from "./integrator";
 import {
   RocketConfig,
@@ -90,13 +91,36 @@ export function simulate(config: RocketConfig, options: SimulateOptions = {}): S
       gravityTurnKickApplied = true;
     }
 
+    const thrustDirection = guidanceComputer({
+
+      time: t,
+
+      altitude: y,
+
+      position: {
+          x,
+          y
+      },
+
+      velocity: {
+          x: vx,
+          y: vy
+      },
+
+      stageIndex: activeStageIndex,
+
+      mass
+
+    });
+    
+
     const forcesNow = computeForces({
       altitudeM: y,
       velocity: { x: vx, y: vy },
       mass,
       stage: stage && fuelRemainingKg > 0 ? stage : null,
       config,
-      gravityTurnActive,
+      thrustDirection,
     });
 
     const derivative = (_t: number, state: number[]) => {

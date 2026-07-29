@@ -6,10 +6,14 @@ export interface FlightForcesInput {
   altitudeM: number;
   velocity: Vector2;
   mass: number;
-  stage: Stage | null; // null once all stages are spent (ballistic coast)
+  stage: Stage | null;
   config: RocketConfig;
-  /** True once the gravity turn has been initiated (thrust follows velocity vector). */
-  gravityTurnActive: boolean;
+
+  /**
+   * Unit vector indicating where the engine is pointing.
+   * Computed by the guidance system.
+   */
+  thrustDirection: Vector2;
 }
 
 export interface FlightForcesOutput {
@@ -30,7 +34,7 @@ export interface FlightForcesOutput {
  * rather than needing hand-authored steering.
  */
 export function computeForces(input: FlightForcesInput): FlightForcesOutput {
-  const { altitudeM, velocity, mass, stage, config, gravityTurnActive } = input;
+  const { altitudeM, velocity, mass, stage, config, thrustDirection  } = input;
 
   const speed = Math.hypot(velocity.x, velocity.y);
   const g = gravityAt(altitudeM);
@@ -46,17 +50,12 @@ export function computeForces(input: FlightForcesInput): FlightForcesOutput {
 
   let thrustN = 0;
   let massFlowRateKgS = 0;
-  let thrustDir: Vector2 = { x: 0, y: 1 };
+  
+  let thrustDir: Vector2 = input.thrustDirection;
 
   if (stage) {
     thrustN = stage.thrustKN * 1000;
     massFlowRateKgS = thrustN / (stage.ispSeconds * G0);
-
-    if (gravityTurnActive && speed > 1e-3) {
-      thrustDir = { x: velocity.x / speed, y: velocity.y / speed };
-    } else {
-      thrustDir = { x: 0, y: 1 };
-    }
   }
 
   const forceX = thrustN * thrustDir.x + dragMagnitudeN * dragDir.x;
