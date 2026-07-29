@@ -48,3 +48,5 @@ export function guidanceMixer(
     });
 
 }
+
+export { GuidanceVector };

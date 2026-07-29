@@ -23,6 +23,38 @@ Ignis aims to make rocket science accessible, exciting, and interactive for stud
 
 **Ignis** is derived from the Latin word for **fire** — representing ignition, energy, propulsion, and the spark that powers every launch.
 
+## Guidance Architecture
+
 ### Pitch Program
 
 A rocket's pitch program (often paired with a roll program) is a pre-programmed flight computer command sequence that tilts a rocket away from a purely vertical liftoff into a curved, horizontal trajectory needed to reach orbital velocity
+
+```text
+                Target Orbit
+                      │
+                      ▼
+              Guidance Manager
+                      │
+      ┌───────────────┼────────────────┐
+      │               │                │
+      ▼               ▼                ▼
+    Pitch Program  Roll Program  Velocity Turn
+      │               │                │
+θ_pitch_cmd      φ_roll_cmd      θ_velocity_cmd
+      │               │                │
+      └───────────────┬────────────────┘
+                      ▼
+            Guidance Command Mixer
+                      │
+              Desired Attitude
+                      │
+                      ▼
+          Attitude Controller (PID)
+                      │
+                      ▼
+       Gimbal / RCS / Control Surfaces
+                      │
+                      ▼
+                Physics Engine
+
+```
