@@ -6,14 +6,14 @@ Users can experiment with rocket configurations, simulate launches, optimize fli
 
 ## Core Features
 
-- Rocket launch simulation with realistic mechanics  
-- Propulsion, thrust, and stage behavior testing  
-- Flight trajectory and altitude analysis  
-- Mission planning and launch sequence control  
-- Sandbox mode for experimentation  
-- Educational aerospace learning experience  
-- Interactive dashboards and telemetry data  
-- Future-ready multiplayer challenges and competitions  
+- Rocket launch simulation with realistic mechanics
+- Propulsion, thrust, and stage behavior testing
+- Flight trajectory and altitude analysis
+- Mission planning and launch sequence control
+- Sandbox mode for experimentation
+- Educational aerospace learning experience
+- Interactive dashboards and telemetry data
+- Future-ready multiplayer challenges and competitions
 
 ## Vision
 
@@ -22,3 +22,7 @@ Ignis aims to make rocket science accessible, exciting, and interactive for stud
 ## Meaning of Ignis
 
 **Ignis** is derived from the Latin word for **fire** — representing ignition, energy, propulsion, and the spark that powers every launch.
+
+### Pitch Program
+
+A rocket's pitch program (often paired with a roll program) is a pre-programmed flight computer command sequence that tilts a rocket away from a purely vertical liftoff into a curved, horizontal trajectory needed to reach orbital velocity
