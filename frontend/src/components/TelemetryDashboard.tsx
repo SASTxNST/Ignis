@@ -1,9 +1,14 @@
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { SimulationState } from "@ignis/physics-engine";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from "recharts";
+import { SimulationState, StageEvent } from "@ignis/physics-engine";
+import { EVENT_META, findFrameIndexForTime } from "../lib/events";
+import InfoTooltip from "./InfoTooltip";
+import { EDUCATION_COPY } from "../lib/education";
 
 interface TelemetryDashboardProps {
   telemetry: SimulationState[];
   frameIndex: number;
+  events: StageEvent[];
+  onSelectEvent: (frameIndex: number) => void;
 }
 
 function Readout({ label, value, unit }: { label: string; value: string; unit: string }) {
@@ -17,7 +22,27 @@ function Readout({ label, value, unit }: { label: string; value: string; unit: s
   );
 }
 
-export default function TelemetryDashboard({ telemetry, frameIndex }: TelemetryDashboardProps) {
+
+function EventMarkers({ events }: { events: StageEvent[] }) {
+  return (
+    <>
+      {events.map((event, i) => {
+        const meta = EVENT_META[event.type];
+        return (
+          <ReferenceLine
+            key={`${event.type}-${event.stageIndex}-${i}`}
+            x={Math.round(event.time)}
+            stroke={meta.color}
+            strokeDasharray="3 3"
+            label={{ value: meta.short, position: "top", fill: meta.color, fontSize: 9 }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+export default function TelemetryDashboard({ telemetry, frameIndex, events, onSelectEvent }: TelemetryDashboardProps) {
   const frame = telemetry[frameIndex];
   const chartData = telemetry.map((f) => ({
     time: Math.round(f.time),
@@ -45,7 +70,9 @@ export default function TelemetryDashboard({ telemetry, frameIndex }: TelemetryD
       </div>
 
       <div className="chart-block">
-        <div className="chart-title">Altitude</div>
+        <div className="chart-title">
+          Altitude <InfoTooltip {...EDUCATION_COPY.gravityTurn} />
+        </div>
         <ResponsiveContainer width="100%" height={140}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#26314a" />
@@ -53,6 +80,7 @@ export default function TelemetryDashboard({ telemetry, frameIndex }: TelemetryD
             <YAxis tick={{ fontSize: 10 }} stroke="#7d8aa8" />
             <Tooltip contentStyle={{ background: "#141a26", border: "1px solid #26314a" }} />
             <Line type="monotone" dataKey="altitudeKm" stroke="#ff5a36" dot={false} strokeWidth={2} />
+            <EventMarkers events={events} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -66,9 +94,36 @@ export default function TelemetryDashboard({ telemetry, frameIndex }: TelemetryD
             <YAxis tick={{ fontSize: 10 }} stroke="#7d8aa8" />
             <Tooltip contentStyle={{ background: "#141a26", border: "1px solid #26314a" }} />
             <Line type="monotone" dataKey="velocityMs" stroke="#5ac8ff" dot={false} strokeWidth={2} />
+            <EventMarkers events={events} />
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {events.length > 0 && (
+        <div className="launch-log">
+          <div className="chart-title">Launch Log</div>
+          <ul className="launch-log-list">
+            {events.map((event, i) => {
+              const meta = EVENT_META[event.type];
+              return (
+                <li key={`${event.type}-${event.stageIndex}-${i}`}>
+                  <button
+                    className="launch-log-item"
+                    onClick={() => onSelectEvent(findFrameIndexForTime(telemetry, event.time))}
+                    type="button"
+                  >
+                    <span className="launch-log-dot" style={{ background: meta.color }} />
+                    <span className="launch-log-text">
+                      Stage {event.stageIndex + 1} — {meta.label}
+                    </span>
+                    <span className="launch-log-time">T+{event.time.toFixed(1)}s</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

@@ -4,22 +4,12 @@ import { SimulationState } from "@ignis/physics-engine";
 
 interface RocketSceneProps {
   telemetry: SimulationState[];
-  /** Index into telemetry currently being displayed — driven by playback controls in the parent. */
+  
   frameIndex: number;
 }
 
-/**
- * Renders the rocket's position along its trajectory using Three.js.
- *
- * Deliberately simple geometry for v1 (cylinder + cone "rocket", a ground
- * plane, a thin line trailing the flown path) — the physics and telemetry
- * are the substance here, not the model detail. Swap in a real GLTF model
- * later without touching the scene wiring below.
- *
- * Positions are scaled down (real altitudes are hundreds of km) so the
- * trajectory stays visible in a reasonably sized viewport.
- */
-const WORLD_SCALE = 1 / 500; // 500 world-meters per simulated meter of altitude/downrange
+
+const WORLD_SCALE = 1 / 500; // 500 world-meters per simulated meter of altitude
 
 export default function RocketScene({ telemetry, frameIndex }: RocketSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -28,7 +18,7 @@ export default function RocketScene({ telemetry, frameIndex }: RocketSceneProps)
   const trailLineRef = useRef<THREE.Line | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
 
-  // One-time scene setup.
+
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -106,12 +96,12 @@ export default function RocketScene({ telemetry, frameIndex }: RocketSceneProps)
     };
   }, []);
 
-  // Reset trail whenever a new telemetry run is loaded.
+  
   useEffect(() => {
     trailPointsRef.current = [];
   }, [telemetry]);
 
-  // Update rocket position + trail whenever the playback frame changes.
+
   useEffect(() => {
     const frame = telemetry[frameIndex];
     const rocket = rocketRef.current;
@@ -122,7 +112,7 @@ export default function RocketScene({ telemetry, frameIndex }: RocketSceneProps)
     const worldY = frame.position.y * WORLD_SCALE;
     rocket.position.set(worldX, worldY, 0);
 
-    // Point the rocket along its velocity vector for a more honest "attitude" cue.
+  
     const angle = Math.atan2(frame.velocity.x, frame.velocity.y || 1e-6);
     rocket.rotation.z = -angle;
 
