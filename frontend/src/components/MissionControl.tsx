@@ -1,4 +1,6 @@
-import { RocketConfig } from "@ignis/physics-engine";
+import { RocketConfig, SimulationRun } from "@ignis/physics-engine";
+import SandboxEditor, { EditableStageField } from "./SandboxEditor";
+import { EVENT_META, findFrameIndexForTime } from "../lib/events";
 
 interface MissionControlProps {
   presets: RocketConfig[];
@@ -6,11 +8,16 @@ interface MissionControlProps {
   onSelectPreset: (id: string) => void;
   onLaunch: () => void;
   isSimulating: boolean;
+  isCountingDown: boolean;
   isPlaying: boolean;
   onTogglePlay: () => void;
   frameIndex: number;
   maxFrameIndex: number;
   onScrub: (index: number) => void;
+  draftConfig: RocketConfig | null;
+  run: SimulationRun | null;
+  onStageFieldChange: (stageIndex: number, field: EditableStageField, value: number) => void;
+  onResetSandbox: () => void;
 }
 
 export default function MissionControl({
@@ -19,11 +26,16 @@ export default function MissionControl({
   onSelectPreset,
   onLaunch,
   isSimulating,
+  isCountingDown,
   isPlaying,
   onTogglePlay,
   frameIndex,
   maxFrameIndex,
   onScrub,
+  draftConfig,
+  run,
+  onStageFieldChange,
+  onResetSandbox,
 }: MissionControlProps) {
   return (
     <div className="mission-control">
@@ -46,22 +58,52 @@ export default function MissionControl({
         </select>
       </label>
 
-      <button className="launch-button" onClick={onLaunch} disabled={!selectedPresetId || isSimulating}>
-        {isSimulating ? "Simulating…" : "Launch"}
+      <SandboxEditor
+        draft={draftConfig}
+        run={run}
+        onFieldChange={onStageFieldChange}
+        onReset={onResetSandbox}
+      />
+
+      <button
+        className="launch-button"
+        onClick={onLaunch}
+        disabled={!draftConfig || isSimulating || isCountingDown}
+      >
+        {isSimulating ? "Simulating…" : isCountingDown ? "Countdown…" : "Launch"}
       </button>
 
       <div className="playback">
-        <button onClick={onTogglePlay} disabled={maxFrameIndex === 0}>
+        <button onClick={onTogglePlay} disabled={maxFrameIndex === 0 || isCountingDown}>
           {isPlaying ? "Pause" : "Play"}
         </button>
-        <input
-          type="range"
-          min={0}
-          max={Math.max(maxFrameIndex, 0)}
-          value={frameIndex}
-          onChange={(e) => onScrub(Number(e.target.value))}
-          disabled={maxFrameIndex === 0}
-        />
+        <div className="scrub-track">
+          <input
+            type="range"
+            min={0}
+            max={Math.max(maxFrameIndex, 0)}
+            value={frameIndex}
+            onChange={(e) => onScrub(Number(e.target.value))}
+            disabled={maxFrameIndex === 0 || isCountingDown}
+          />
+          {run && maxFrameIndex > 0 && (
+            <div className="scrub-ticks">
+              {run.events.map((event, i) => {
+                const eventFrame = findFrameIndexForTime(run.telemetry, event.time);
+                const pct = (eventFrame / maxFrameIndex) * 100;
+                const meta = EVENT_META[event.type];
+                return (
+                  <span
+                    key={`${event.type}-${event.stageIndex}-${i}`}
+                    className="scrub-tick"
+                    style={{ left: `${pct}%`, background: meta.color }}
+                    title={`${meta.label} — T+${event.time.toFixed(1)}s`}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
