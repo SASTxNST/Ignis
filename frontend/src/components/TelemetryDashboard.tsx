@@ -22,9 +22,7 @@ function Readout({ label, value, unit }: { label: string; value: string; unit: s
   );
 }
 
-// One <ReferenceLine> per event, shared between both charts. Kept as a
-// component instead of inline JSX so the same markers stay in sync across
-// the altitude and velocity charts.
+
 function EventMarkers({ events }: { events: StageEvent[] }) {
   return (
     <>

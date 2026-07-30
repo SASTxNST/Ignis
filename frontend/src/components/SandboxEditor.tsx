@@ -21,9 +21,7 @@ interface SandboxEditorProps {
 export default function SandboxEditor({ draft, run, onFieldChange, onReset }: SandboxEditorProps) {
   if (!draft) return null;
 
-  // The backend is the only thing that knows Δv — this just decides whether
-  // the *last computed* value still describes the config on screen, by
-  // comparing to the config that was actually sent for that run.
+ 
   const isStale = run ? JSON.stringify(run.config) !== JSON.stringify(draft) : false;
 
   return (

@@ -1,10 +1,8 @@
-import { RocketConfig, SimulationRun } from "/Ignis/physics-engine";
+import { RocketConfig, SimulationRun } from "@Ignis/physics-engine";
 
 const BASE = "/api";
 
-// Backend's structured error shape (see backend/src/routes/*). `details` is
-// optional and, when present, is the more specific field-level message —
-// e.g. "thrustKN must be greater than 0".
+
 interface BackendErrorBody {
   error?: string;
   details?: string;

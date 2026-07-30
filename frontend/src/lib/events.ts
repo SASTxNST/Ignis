@@ -8,12 +8,7 @@ export const EVENT_META: Record<StageEventType, { label: string; short: string; 
   impact: { label: "Impact", short: "IMP", color: "#ff5a36" },
 };
 
-/**
- * telemetry is a fixed-timestep timeline sorted by time. Given an event's
- * timestamp, find the index of the closest frame — used to scrub playback
- * to an event and to place ticks on the scrub bar. This is a lookup over
- * already-computed data, not a physics calculation.
- */
+
 export function findFrameIndexForTime(telemetry: SimulationState[], time: number): number {
   if (telemetry.length === 0) return 0;
   let closest = 0;

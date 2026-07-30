@@ -8,9 +8,7 @@ import ErrorBanner from "./components/ErrorBanner";
 import Countdown from "./components/Countdown";
 import { EditableStageField } from "./components/SandboxEditor";
 
-// Advance through telemetry frames faster than real-time, since real burns
-// and coasts run into the tens of minutes — this is a playback speed, not a
-// physics parameter, so it never touches the simulation itself.
+
 const PLAYBACK_FRAMES_PER_SECOND = 30;
 
 export default function App() {
@@ -47,11 +45,6 @@ export default function App() {
     };
   }, [isPlaying, run]);
 
-  // Selecting a vehicle resets the sandbox draft to a fresh clone of that
-  // preset. structuredClone (not spread/assign) so nested `stages` objects
-  // are independent copies too — editing draft.stages[i].thrustKN must never
-  // touch presets[i], since that array is also what repopulates the draft
-  // on "Reset to preset".
   function handleSelectPreset(id: string) {
     setSelectedPresetId(id);
     const preset = presets.find((p) => p.id === id);
@@ -83,8 +76,7 @@ export default function App() {
       const result = await runSimulation(draftConfig);
       setRun(result);
       setFrameIndex(0);
-      // Don't start playback yet — the countdown overlay owns that transition.
-      // handleCountdownComplete flips isPlaying once it finishes (or is skipped).
+
       setIsCountingDown(true);
     } catch (err) {
       setError(describeApiError(err));

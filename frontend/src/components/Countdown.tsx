@@ -7,8 +7,7 @@ interface CountdownProps {
   onComplete: () => void;
 }
 
-// step: 10..1 renders "T-n", 0 renders "IGNITION", -1 renders "LIFTOFF".
-// Once step drops below -1 the sequence is done and onComplete fires.
+
 function labelFor(step: number): string {
   if (step > 0) return `T-${step}`;
   if (step === 0) return "IGNITION";
@@ -25,7 +24,7 @@ export default function Countdown({ onComplete }: CountdownProps) {
     }
     const timer = window.setTimeout(() => setStep((s) => s - 1), STEP_MS);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [step]);
 
   const label = labelFor(step);
