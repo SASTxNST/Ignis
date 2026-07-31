@@ -183,7 +183,7 @@ export function simulate(
 
   const intOpts: IntegratorOptions = {
     method: "RK45",
-    solverTolerance: options.solverRelativeTolerance,
+    solverTolerance: Math.min(options.solverRelativeTolerance, options.solverAbsoluteTolerance),
   };
 
   const telemetry: RocketState[] = [];
