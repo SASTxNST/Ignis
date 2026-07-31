@@ -211,6 +211,7 @@ export function simulate(
     );
 
     for (let k = 0; k < segment.t.length; k++) {
+      if (k % options.telemetryRecordStride !== 0 && k !== segment.t.length - 1) continue;
       telemetry.push(
         buildTelemetry(config, missionTime + segment.t[k], segment.y[k], segment.forces[k], i),
       );
