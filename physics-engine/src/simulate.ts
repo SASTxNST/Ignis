@@ -1,6 +1,6 @@
 import { FIXED_TIMESTEP_S, G0 } from "./constants";
 import { computeForces } from "./forces";
-import { guidanceComputer } from "./guidance";
+import { guidanceComputer, LEO_500KM, MissionProfile } from "./guidance";
 import { rk4Step } from "./integrator";
 import {
   RocketConfig,
@@ -16,6 +16,8 @@ export interface SimulateOptions {
   maxTimeS?: number;
   /** Record telemetry every N physics steps to keep arrays a manageable size. */
   telemetryStride?: number;
+  /** Target mission profile for guidance calculations. Defaults to LEO_500KM. */
+  mission?: MissionProfile;
 }
 
 function stageTotalMass(stage: Stage): number {
@@ -54,6 +56,7 @@ export function theoreticalDeltaV(config: RocketConfig): number {
 export function simulate(config: RocketConfig, options: SimulateOptions = {}): SimulationRun {
   const maxTimeS = options.maxTimeS ?? 3000;
   const stride = options.telemetryStride ?? 4;
+  const mission = options.mission ?? LEO_500KM;
   const dt = FIXED_TIMESTEP_S;
 
   let t = 0;
@@ -91,27 +94,17 @@ export function simulate(config: RocketConfig, options: SimulateOptions = {}): S
       gravityTurnKickApplied = true;
     }
 
-    const thrustDirection = guidanceComputer({
-
-      time: t,
-
-      altitude: y,
-
-      position: {
-          x,
-          y
+    const thrustDirection = guidanceComputer(
+      {
+        time: t,
+        position: { x, y },
+        altitude: y,
+        velocity: { x: vx, y: vy },
+        mass,
+        stageIndex: activeStageIndex,
       },
-
-      velocity: {
-          x: vx,
-          y: vy
-      },
-
-      stageIndex: activeStageIndex,
-
-      mass
-
-    });
+      mission
+    );
     
 
     const forcesNow = computeForces({
