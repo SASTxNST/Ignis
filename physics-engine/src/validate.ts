@@ -15,7 +15,7 @@
 import { rk4Step } from "./integrator";
 import { G0 } from "./constants";
 import { simulate, theoreticalDeltaV } from "./simulate";
-import { VIKRAM_1, LVM3, FALCON_9 } from "./presets";
+import { VIKRAM_1, LVM3, FALCON_9, PSLV_XL, SSLV } from "./presets";
 
 function checkIntegratorAgainstTsiolkovsky() {
   const thrustN = 1_200_000; // 1200 kN
@@ -75,3 +75,5 @@ checkIntegratorAgainstTsiolkovsky();
 runSanityCheck("Vikram-1", VIKRAM_1);
 runSanityCheck("LVM3", LVM3);
 runSanityCheck("Falcon 9", FALCON_9);
+runSanityCheck("pslv-xl", PSLV_XL);
+runSanityCheck("sslv", SSLV);
