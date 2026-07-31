@@ -1,6 +1,6 @@
 import { G0 } from "./constants";
 import { RocketConfig, StateVector } from "./types";
-import { getForces, DerivativeOptions } from "./forces";
+import { DerivativeOptions } from "./forces";
 import { integrateSpan, IntegratorOptions } from "./integrator";
 import { VIKRAM_1 } from "./presets/vikram1";
 
