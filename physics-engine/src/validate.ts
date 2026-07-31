@@ -19,7 +19,8 @@ import { theoreticalDeltaV } from "./deltaV";
 const ERROR_BUDGET_PCT = 0.0597;
 
 function pctError(measured: number, reference: number): number {
-  return ((measured - reference) / reference) * 100;
+  if (reference === 0) return measured === 0 ? 0 : Infinity;
+  return (Math.abs(measured - reference) / Math.abs(reference)) * 100;
 }
 
 /**
