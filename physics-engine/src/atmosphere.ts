@@ -20,7 +20,6 @@ import {
   SUTHERLAND_REF_TEMPERATURE,
   SUTHERLAND_REF_VISCOSITY,
   SUTHERLAND_CONSTANT,
-  ATMOSPHERE_CUTOFF_ALTITUDE_M,
 } from "./constants";
 import { AtmosphericState } from "./types";
 
@@ -162,22 +161,16 @@ function sutherlandViscosity(temperatureK: number): number {
  * dynamic viscosity) at a given geometric altitude using the International
  * Standard Atmosphere (ISA) layered model.
  *
- * Covers the full range from sea level through mesopause (0–90 km).
- * Above 90 km, density is extrapolated; above ATMOSPHERE_CUTOFF_ALTITUDE_M
- * the atmosphere is treated as vacuum (zero density, zero pressure).
+ * Covers the full range from sea level through mesopause (0–90 km) and
+ * continues the mesopause isothermal layer above it, so density decays
+ * exponentially toward (but never reaching) zero. This is deliberately
+ * CONTINUOUS at all altitudes — a hard "vacuum above 100 km" cutoff would
+ * create a jump discontinuity in drag (density, temperature, speed of sound
+ * snapping to zero), which breaks adaptive integrators: the RK45 error
+ * estimate becomes dominated by the jump and never converges.
  */
 export function getAtmosphere(altitudeMeters: number): AtmosphericState {
   const h = Math.max(0, altitudeMeters);
-
-  if (h >= ATMOSPHERE_CUTOFF_ALTITUDE_M) {
-    return {
-      temperature: 0,
-      pressure: 0,
-      density: 0,
-      speedOfSound: 0,
-      dynamicViscosity: 0,
-    };
-  }
 
   // Find the layer containing this altitude
   let layer = ISA_LAYERS[0];

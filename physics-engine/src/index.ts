@@ -7,5 +7,7 @@ export * from "./atmosphere";
 export * from "./gravity";
 export * from "./propulsion";
 export * from "./drag";
+export * from "./forces";
+export * from "./integrator";
 export * from "./validate";
 export * from "./presets";
