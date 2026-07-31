@@ -2,3 +2,6 @@ node_modules/
 dist/
 .DS_Store
 *.log
+IGNIS_BUILD_ROADMAP.md
+IGNIS_PROGRESS.md
+IGNIS_PHYSICS_ENGINE_SPEC.md
