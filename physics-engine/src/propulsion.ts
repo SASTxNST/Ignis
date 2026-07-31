@@ -126,3 +126,25 @@ export function getMass(
 
   return Math.max(mass, minMass);
 }
+
+/**
+ * Returns the instantaneous propellant mass flow rate (kg/s) at a given time
+ * since stage ignition. Positive when burning, zero outside the burn window.
+ *
+ * Derived from the thrust curve and vacuum specific impulse:
+ *   dm/dt = T_curve(t) / (Isp_vacuum * g0)
+ *
+ * This is exactly the derivative of getMass(), so the ODE's dmdt term stays
+ * impulse-consistent with the mass-depletion model used in Phase 4.
+ */
+export function getMassFlowRate(
+  timeSinceIgnition: number,
+  stage: StageConfig,
+): number {
+  if (timeSinceIgnition < 0 || timeSinceIgnition > stage.burnTime) return 0;
+
+  const baseThrust = interpolateCurve(stage.thrustCurve, timeSinceIgnition);
+  if (baseThrust <= 0) return 0;
+
+  return baseThrust / (stage.ispVacuum * G0);
+}

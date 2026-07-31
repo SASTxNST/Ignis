@@ -18,46 +18,76 @@ function interpolateCd(curve: DragCoefficientPoint[], mach: number): number {
 }
 
 /**
- * Computes aerodynamic drag force at a given velocity and altitude.
+ * Full drag computation detail — drag vector plus the flow quantities that
+ * produced it (dynamic pressure, Mach number, local density/speed of sound,
+ * interpolated drag coefficient). Exposed so the integrator can report
+ * per-step telemetry forces consistent with the drag used inside the ODE.
+ */
+export interface DragDetails {
+  /** Drag force vector (N), opposing the velocity vector */
+  drag: Vector2;
+  /** Speed magnitude (m/s) */
+  speed: number;
+  /** Local air density (kg/m^3) */
+  density: number;
+  /** Local speed of sound (m/s) */
+  speedOfSound: number;
+  /** Mach number: speed / speedOfSound (dimensionless) */
+  machNumber: number;
+  /** Interpolated drag coefficient at this Mach number (dimensionless) */
+  dragCoefficient: number;
+  /** Dynamic pressure: 0.5 * rho * v^2 (Pa) */
+  dynamicPressure: number;
+}
+
+export function getDragDetails(
+  velocity: Vector2,
+  altitude: number,
+  config: RocketConfig,
+): DragDetails {
+  const speed = Math.hypot(velocity.x, velocity.y);
+
+  const atmo = getAtmosphere(altitude);
+  const machNumber = speed / atmo.speedOfSound;
+  const dragCoefficient = interpolateCd(config.dragCoefficientCurve, machNumber);
+  const dynamicPressure = 0.5 * atmo.density * speed * speed;
+  const dragMag = dynamicPressure * dragCoefficient * config.referenceAreaM2;
+
+  // Drag opposes the full velocity vector; zero at v = 0
+  const drag: Vector2 =
+    speed < 1e-12
+      ? { x: 0, y: 0 }
+      : {
+          x: -(velocity.x / speed) * dragMag,
+          y: -(velocity.y / speed) * dragMag,
+        };
+
+  return {
+    drag,
+    speed,
+    density: atmo.density,
+    speedOfSound: atmo.speedOfSound,
+    machNumber,
+    dragCoefficient,
+    dynamicPressure,
+  };
+}
+
+/**
+ * Computes aerodynamic drag force at a given 2D velocity and altitude.
  *
  * Drag magnitude: F_drag = 0.5 * rho * v^2 * Cd(M) * A_ref
  *   where Cd(M) comes from the rocket's Mach-dependent drag coefficient curve
  *   (smooth transonic rise around Mach 1 is defined by the curve points).
  *
- * Direction always opposes velocity. Returns zero at v = 0.
+ * Direction always opposes the full velocity vector. Returns zero at v = 0.
  */
 export function getDrag(
-  velocity: number,
+  velocity: Vector2,
   altitude: number,
   config: RocketConfig,
 ): ForceVectors {
-  const speed = Math.abs(velocity);
-
-  const zero: ForceVectors = {
-    thrust: { x: 0, y: 0 },
-    gravity: { x: 0, y: 0 },
-    drag: { x: 0, y: 0 },
-    total: { x: 0, y: 0 },
-  };
-
-  if (speed < 1e-12) return zero;
-
-  const atmo = getAtmosphere(altitude);
-  const mach = speed / atmo.speedOfSound;
-  const Cd = interpolateCd(config.dragCoefficientCurve, mach);
-  const q = 0.5 * atmo.density * speed * speed;
-  const dragMag = q * Cd * config.referenceAreaM2;
-
-  // Drag opposes velocity direction
-  const direction: Vector2 = {
-    x: -(velocity / speed),
-    y: 0,
-  };
-
-  const drag: Vector2 = {
-    x: direction.x * dragMag,
-    y: 0,
-  };
+  const { drag } = getDragDetails(velocity, altitude, config);
 
   return {
     thrust: { x: 0, y: 0 },

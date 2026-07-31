@@ -58,6 +58,13 @@ export interface RocketState {
   dynamicPressure: number;
   /** Mach number: velocity / local speed of sound (dimensionless) */
   machNumber: number;
+  /**
+   * Individual force vectors acting on the vehicle at this instant (N).
+   * Present on telemetry snapshots produced by the integrator (Phase 7+).
+   */
+  forces?: ForceVectors;
+  /** Resulting acceleration vector (m/s^2) */
+  acceleration?: Vector2;
 }
 
 // -----------------------------------------------------------
