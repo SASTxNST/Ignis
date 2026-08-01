@@ -23,12 +23,10 @@ export function buildPEGTarget(
 
 ): PEGTarget {
 
-    const radius =
-
-        EARTH_RADIUS +
-
-        mission.orbit.apogeeM;
-
+    if (mission.orbit.apogeeM !== mission.orbit.perigeeM) {
+        throw new Error("buildPEGTarget currently supports only circular target orbits (apogeeM must equal perigeeM).");
+    }
+    const radius = EARTH_RADIUS + mission.orbit.apogeeM;
     const velocity =
 
         Math.sqrt(
