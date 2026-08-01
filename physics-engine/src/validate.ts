@@ -317,9 +317,9 @@ const MU = G0 * EARTH_RADIUS_M * EARTH_RADIUS_M;
 
 /**
  * Analytical apogee altitude (m) for a vertical vacuum launch at speed v0
- * under inverse-square gravity. Equivalent rearrangements:
- *   h = R/(1 - v0^2*R/(2*mu)) - R   =   -R/(1 + v0^2*R/(2*mu)) + R
- * The latter (h_apogee = -R/(1 + v^2 R/2mu) + R) is the form in the spec log.
+ * under inverse-square gravity. Equivalent rearrangement:
+ *   h = R/(1 - v0^2*R/(2*mu)) - R   =   (v0^2 * R * R) / (2*mu - v0^2*R)
+ * (These are algebraically identical; avoid forms with a `1 + v0^2 R/(2 mu)` denominator, which are not equivalent.)
  */
 export function inverseSquareVerticalApogee(v0: number): number {
   const denom = 1 - (v0 * v0 * EARTH_RADIUS_M) / (2 * MU);
