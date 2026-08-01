@@ -306,7 +306,7 @@ export function checkTsiolkovsky(): boolean {
 //     v0^2/2 - mu/R = -mu/(R + h_apogee)
 //     => mu/(R + h_apogee) = mu/R - v0^2/2
 //     => R + h_apogee = mu / (mu/R - v0^2/2) = R / (1 - v0^2 R / (2 mu))
-//     => h_apogee = R/(1 - v0^2 R/(2 mu)) - R  =  -R/(1 + v0^2 R/(2 mu)) + R
+//     => h_apogee = R/(1 - v0^2 R/(2 mu)) - R = (v0^2 * R * R) / (2 * mu - v0^2 * R)
 //
 // This is the formally-correct 0.0597% reference for the production model
 // that validate.ts deferred from Phase 7. We assert against THIS, not the
