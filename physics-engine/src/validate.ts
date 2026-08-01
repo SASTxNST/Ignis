@@ -1,6 +1,6 @@
 import { EARTH_RADIUS_M, G0 } from "./constants";
 import { RocketConfig, StateVector } from "./types";
-import { getForces, DerivativeOptions } from "./forces";
+import { DerivativeOptions } from "./forces";
 import { integrateSpan, IntegratorOptions, simulate } from "./integrator";
 import { reportTrajectory } from "./trajectoryValidator";
 import { VIKRAM_1 } from "./presets/vikram1";
@@ -21,7 +21,8 @@ import { theoreticalDeltaV } from "./deltaV";
 const ERROR_BUDGET_PCT = 0.0597;
 
 function pctError(measured: number, reference: number): number {
-  return ((measured - reference) / reference) * 100;
+  if (reference === 0) return measured === 0 ? 0 : Infinity;
+  return (Math.abs(measured - reference) / Math.abs(reference)) * 100;
 }
 
 /**
