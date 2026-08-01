@@ -438,11 +438,16 @@ export function runValidationSuite(): boolean {
   return allPass;
 }
 
+declare var require: any;
+declare var module: any;
+declare var process: any;
+
 function main(): void {
   const ok = runValidationSuite();
   if (!ok) process.exitCode = 1;
 }
 
-if (require.main === module) {
+if (typeof require !== "undefined" && typeof module !== "undefined" && require.main === module) {
   main();
 }
+
