@@ -189,25 +189,33 @@ export function validateTrajectory(run: SimulationRun): ValidationReport {
   });
 
   // --- Check 4: monotonic non-increasing altitude after apogee ---
-  let descentMonotonic = true;
+  const hasPostApogeeSamples = apogeeIdx < altitudes.length - 1;
+  let descentMonotonic = hasPostApogeeSamples;
   let worstRise = 0;
-  let worstRiseTime = 0;
-  for (let i = apogeeIdx + 1; i < altitudes.length; i++) {
-    const rise = altitudes[i] - altitudes[i - 1];
-    if (rise > eps) {
-      descentMonotonic = false;
-      if (rise > worstRise) {
-        worstRise = rise;
-        worstRiseTime = times[i];
+  let worstRiseTime = apogeeTime;
+
+  if (hasPostApogeeSamples) {
+    descentMonotonic = true;
+    for (let i = apogeeIdx + 1; i < altitudes.length; i++) {
+      const rise = altitudes[i] - altitudes[i - 1];
+      if (rise > eps) {
+        descentMonotonic = false;
+        if (rise > worstRise) {
+          worstRise = rise;
+          worstRiseTime = times[i];
+        }
       }
     }
   }
+
   checks.push({
     name: "altitude decreases monotonically after apogee",
     pass: descentMonotonic,
-    detail: descentMonotonic
-      ? `altitude non-increasing from apogee to impact (final ${altitudes[altitudes.length - 1].toFixed(3)} m)`
-      : `altitude increased by ${worstRise.toFixed(3)} m after apogee near t=${worstRiseTime.toFixed(3)} s`,
+    detail: !hasPostApogeeSamples
+      ? "apogee is the final telemetry sample; simulation ended before descent/impact"
+      : descentMonotonic
+        ? `altitude non-increasing from apogee to impact (final ${altitudes[altitudes.length - 1].toFixed(3)} m)`
+        : `altitude increased by ${worstRise.toFixed(3)} m after apogee near t=${worstRiseTime.toFixed(3)} s`,
   });
 
   // --- Check 5: no altitude oscillation ---
