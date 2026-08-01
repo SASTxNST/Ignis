@@ -1,8 +1,10 @@
-import { G0 } from "./constants";
+import { EARTH_RADIUS_M, G0 } from "./constants";
 import { RocketConfig, StateVector } from "./types";
 import { DerivativeOptions } from "./forces";
-import { integrateSpan, IntegratorOptions } from "./integrator";
+import { integrateSpan, IntegratorOptions, simulate } from "./integrator";
+import { reportTrajectory } from "./trajectoryValidator";
 import { VIKRAM_1 } from "./presets/vikram1";
+import { LVM3 } from "./presets/lvm3";
 
 export { theoreticalDeltaV } from "./deltaV";
 import { theoreticalDeltaV } from "./deltaV";
@@ -74,7 +76,7 @@ function runProjectile(
 // Test 1 — Vacuum projectile vs analytical closed-form apogee
 // -----------------------------------------------------------
 
-export function checkVacuumProjectile(): void {
+export function checkVacuumProjectile(): boolean {
   console.log("=== Phase 7, Test 1: Vacuum projectile (analytical validation) ===");
 
   const v0 = 500; // m/s
@@ -144,13 +146,15 @@ export function checkVacuumProjectile(): void {
   console.log("  decision at this apogee (g drops ~0.1% over 6.4 km). The 0.0597%");
   console.log("  budget is formally tested in Phase 8 against the correct reference");
   console.log("  for the production model (energy-conservation apogee).");
+
+  return altitudeErrPct < ERROR_BUDGET_PCT && gravityErrPct < ERROR_BUDGET_PCT;
 }
 
 // -----------------------------------------------------------
 // Test 2 — Convergence test (spec Section 3.7)
 // -----------------------------------------------------------
 
-export function checkConvergence(): void {
+export function checkConvergence(): boolean {
   console.log("=== Phase 7, Test 2: Convergence test (tolerance tightening) ===");
 
   const v0 = 500;
@@ -209,13 +213,15 @@ export function checkConvergence(): void {
   } else {
     console.log("    Tolerance settled at tol = 1e-9 (tightening to 1e-10 moves apogee by << 0.0597%).");
   }
+
+  return deltaConstantG < ERROR_BUDGET_PCT && deltaProduction < ERROR_BUDGET_PCT;
 }
 
 // -----------------------------------------------------------
 // Test 3 — Tsiolkovsky consistency (Vikram-1, vacuum, staged)
 // -----------------------------------------------------------
 
-export function checkTsiolkovsky(): void {
+export function checkTsiolkovsky(): boolean {
   console.log("=== Phase 7, Test 3: Tsiolkovsky consistency (Vikram-1, vacuum) ===");
 
   const config = VIKRAM_1;
@@ -277,26 +283,164 @@ export function checkTsiolkovsky(): void {
     `  ${deltaVErrPct < ERROR_BUDGET_PCT ? "PASS" : "FAIL"}`,
     "delta-V error must be < 0.0597% ->", deltaVErrPct.toExponential(4), "%",
   );
+
+  return deltaVErrPct < ERROR_BUDGET_PCT;
+}
+
+// -----------------------------------------------------------
+// Phase 8 — Production-model analytical reference (spec Section 3.7, step 1)
+// -----------------------------------------------------------
+//
+// The Phase 7 vacuum-projectile test used CONSTANT-g, because that has a
+// closed-form solution (y_apogee = v_y^2 / 2g). But the PRODUCTION model uses
+// inverse-square gravity, so its correct analytical reference is NOT the
+// constant-g parabola — it is the energy-conservation apogee of a purely
+// vertical ballistic launch under g(h) = G0 * (R/(R+h))^2.
+//
+// Derivation (1D vertical, no thrust/drag; x-velocity stays zero so there is
+// no angular-momentum term to carry kinetic energy at apogee):
+//   Specific energy:   e = v^2/2 - mu/(R+h)        with mu = G0 * R^2
+//   At launch (h=0):   e0 = v0^2/2 - mu/R
+//   At apogee (v=0):   e1 = -mu/(R + h_apogee)
+//   Conservation e0 = e1:
+//     v0^2/2 - mu/R = -mu/(R + h_apogee)
+//     => mu/(R + h_apogee) = mu/R - v0^2/2
+//     => R + h_apogee = mu / (mu/R - v0^2/2) = R / (1 - v0^2 R / (2 mu))
+//     => h_apogee = R/(1 - v0^2 R/(2 mu)) - R = (v0^2 * R * R) / (2 * mu - v0^2 * R)
+//
+// This is the formally-correct 0.0597% reference for the production model
+// that validate.ts deferred from Phase 7. We assert against THIS, not the
+// constant-g closed form (which legitimately differs by ~0.1% at 6.4 km).
+
+/** Gravitational parameter mu = G0 * R^2 (m^3/s^2), from recorded constants. */
+const MU = G0 * EARTH_RADIUS_M * EARTH_RADIUS_M;
+
+/**
+ * Analytical apogee altitude (m) for a vertical vacuum launch at speed v0
+ * under inverse-square gravity. Equivalent rearrangement:
+ *   h = R/(1 - v0^2*R/(2*mu)) - R   =   (v0^2 * R * R) / (2*mu - v0^2*R)
+ * (These are algebraically identical; avoid forms with a `1 + v0^2 R/(2 mu)` denominator, which are not equivalent.)
+ */
+export function inverseSquareVerticalApogee(v0: number): number {
+  const denom = 1 - (v0 * v0 * EARTH_RADIUS_M) / (2 * MU);
+  if (denom <= 0) return Infinity; // at/above escape energy — never returns
+  return EARTH_RADIUS_M / denom - EARTH_RADIUS_M;
+}
+
+/**
+ * Phase 8, Test — Vertical vacuum launch vs energy-conservation closed form.
+ *
+ * Launches straight up at v0 with NO thrust, NO drag, and the production
+ * inverse-square gravity model (no gravityMs2 override). Compares the
+ * integrated apogee altitude to inverseSquareVerticalApogee(v0). This is the
+ * check that the 0.0597% budget formally applies to the model that ships.
+ *
+ * Note: runProjectile uses `getStateDerivative` via the same production path,
+ * so a carry-through of the integrator's vy-sign detection is sufficient; the
+ * test deliberately uses a sub-orbital v0 well below escape velocity.
+ */
+function checkInverseSquareApogee(): { errorPct: number; pass: boolean } {
+  console.log("=== Phase 8: Inverse-square gravity vs energy-conservation apogee ===");
+
+  const v0 = 500; // m/s — sub-orbital, well below escape; h_apogee ~ 6.4 km
+  const reference = inverseSquareVerticalApogee(v0);
+  // Time to apogee is not closed-form here; integrate well past the expected
+  // ballistic time. A generous upper bound: vertical free-fall time under
+  // constant g0 (~2*v0/G0 * 2 for margin).
+  const tEnd = (2 * v0 / G0) * 2.5;
+
+  console.log("  Launch: vertical, v0 =", v0, "m/s, no thrust, no drag");
+  console.log("  Reference apogee (energy conservation, inverse-square):", reference.toFixed(6), "m");
+
+  const y0: StateVector = [0, 0, 0, v0, 1000];
+  const derOpts: DerivativeOptions = {
+    enableThrust: false,
+    enableDrag: false,
+    enableGravity: true, // production inverse-square model; NO gravityMs2 override
+  };
+
+  const result = runProjectile(VIKRAM_1, y0, tEnd, derOpts, 1e-9);
+
+  const altitudeErrPct = pctError(result.apogeeAltitudeM, reference);
+  const pass = Math.abs(altitudeErrPct) < ERROR_BUDGET_PCT;
+
+  console.log("  Simulated apogee altitude:", result.apogeeAltitudeM.toFixed(6), "m");
+  console.log("  Apogee altitude error vs inverse-square reference:", altitudeErrPct.toExponential(4), "%");
+  console.log(
+    `  ${pass ? "PASS" : "FAIL"} apogee error must be < ${ERROR_BUDGET_PCT}% vs the correct production reference ->`,
+    altitudeErrPct.toExponential(4), "%",
+  );
+  console.log("  (This is the formally-correct 0.0597% reference for the");
+  console.log("   production inverse-square model, deferred from Phase 7.)");
+
+  return { errorPct: altitudeErrPct, pass };
+}
+
+// -----------------------------------------------------------
+// Phase 9 — Full-flight trajectory plausibility (spec Section 5, step 4)
+// -----------------------------------------------------------
+
+/**
+ * Runs full simulate() for preset vehicles with the production force models
+ * (drag + inverse-square gravity + guidance) and asserts the trajectory has
+ * the physically-expected shape: monotone powered ascent, exactly one apogee,
+ * monotone descent, no negative altitude, no oscillation. This is the Phase 9
+ * "looks-like-a-real-rocket" gate, distinct from the Phase 7/8 accuracy checks.
+ */
+function checkTrajectoryPlausibility(): boolean {
+  const vikram = reportTrajectory("Vikram-1", simulate(VIKRAM_1));
+  console.log("");
+  const lvm3 = reportTrajectory("LVM3", simulate(LVM3));
+  return vikram.pass && lvm3.pass;
 }
 
 // -----------------------------------------------------------
 // Main entry (runs when validate.ts is executed directly)
 // -----------------------------------------------------------
 
-function main(): void {
+/**
+ * Runs the full validation suite (Phase 7 checks + the Phase 8 inverse-square
+ * energy-conservation reference) and prints a clear pass/fail report with the
+ * actual error percentages produced by every check — not just "tests passed".
+ * Returns true only if every check passed.
+ */
+export function runValidationSuite(): boolean {
   console.log("==============================================");
-  console.log("Ignis Physics Engine — Phase 7 Validation");
+  console.log("Ignis Physics Engine — Validation Suite (Phases 7-9)");
   console.log("Error budget: 0.0597% (apogee / Tsiolkovsky delta-V)");
   console.log("==============================================");
 
-  checkVacuumProjectile();
+  const checks: Array<{ name: string; pass: boolean }> = [];
+
+  checks.push({ name: "Phase 7 Test 1 — vacuum projectile vs constant-g closed form", pass: checkVacuumProjectile() });
   console.log("");
-  checkConvergence();
+  checks.push({ name: "Phase 7 Test 2 — convergence (tolerance tightening)", pass: checkConvergence() });
   console.log("");
-  checkTsiolkovsky();
+  checks.push({ name: "Phase 7 Test 3 — Tsiolkovsky delta-V consistency", pass: checkTsiolkovsky() });
   console.log("");
+  const invSq = checkInverseSquareApogee();
+  checks.push({ name: "Phase 8 — inverse-square gravity vs energy-conservation apogee", pass: invSq.pass });
+  console.log("");
+  checks.push({ name: "Phase 9 — trajectory plausibility (Vikram-1 & LVM3)", pass: checkTrajectoryPlausibility() });
+  console.log("");
+
   console.log("==============================================");
-  console.log("Phase 7 validation complete.");
+  console.log("VALIDATION SUITE SUMMARY (error budget 0.0597%)");
+  console.log("==============================================");
+  let allPass = true;
+  for (const c of checks) {
+    console.log(`  [${c.pass ? "PASS" : "FAIL"}] ${c.name}`);
+    if (!c.pass) allPass = false;
+  }
+  console.log("==============================================");
+  console.log(allPass ? "ALL CHECKS PASSED" : "SOME CHECKS FAILED");
+  console.log("==============================================");
+  return allPass;
+}
+
+function main(): void {
+  const ok = runValidationSuite();
+  if (!ok) process.exitCode = 1;
 }
 
 if (require.main === module) {
