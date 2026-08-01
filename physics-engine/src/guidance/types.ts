@@ -23,3 +23,29 @@ export interface GuidanceVector {
 export interface GuidanceCommand {
     thrustDirection: Vector2;
 }
+
+export interface PEGMission {
+
+    targetApogeeM: number;
+
+    targetPerigeeM: number;
+
+    targetInclinationDeg: number;
+
+}
+
+export interface OrbitEstimate {
+
+    radius: number;
+
+    velocity: number;
+
+    circularVelocity: number;
+
+    escapeVelocity: number;
+
+    specificEnergy: number;
+
+    remainingDeltaV: number;
+
+}

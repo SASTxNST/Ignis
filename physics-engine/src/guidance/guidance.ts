@@ -1,14 +1,12 @@
 import { Vector2 } from "../types";
-
-
-
 import { pitchProgram } from "./pitchProgram";
 import { rollProgram } from "./rollProgram";
 import { velocityTurn } from "./velocityTurn";
-
 import { guidanceMixer } from "./guidanceMixer";
-
 import { GuidanceState, GuidanceVector } from "./types";
+import { pegGuidance } from "./peg/peg";
+import { MissionProfile } from "./mission/mission";
+import { LEO_500KM } from "./mission/presets";
 
 /**
  * Smoothstep (quintic, C2-continuous): 0 for x <= 0, 1 for x >= 1.
@@ -62,38 +60,32 @@ function smoothPitchWeight(altitude: number): number {
 }
 
 export function guidanceComputer(
-    state: GuidanceState
+    state: GuidanceState,
+    mission: MissionProfile = LEO_500KM
 ): Vector2 {
-
     const pitch = pitchProgram(state);
-
     const roll = rollProgram(state);
-
     const velocity = velocityTurn(state);
-
+    const peg = pegGuidance(state, mission);
     const pitchWeight = smoothPitchWeight(state.altitude);
-    const velocityWeight = 1 - pitchWeight;
+    const unpegWeight = 1 - peg.weight;
+    const velocityWeight = (1 - pitchWeight) * unpegWeight;
+    const blendedPitchWeight = pitchWeight * unpegWeight;
     const rollWeight = 0;
-
     const guidanceVectors: GuidanceVector[] = [
-
         {
             direction: pitch,
-            weight: pitchWeight
+            weight: blendedPitchWeight
         },
-
         {
             direction: velocity,
             weight: velocityWeight
         },
-
         {
             direction: roll,
             weight: rollWeight
-        }
-
+        },
+        peg
     ];
-
     return guidanceMixer(guidanceVectors);
-
 }

@@ -38,9 +38,11 @@ A rocket's pitch program (often paired with a roll program) is a pre-programmed 
       ┌───────────────┼────────────────┐
       │               │                │
       ▼               ▼                ▼
-    Pitch Program  Roll Program  Velocity Turn
+    Pitch & Roll    PEG            Velocity Turn
+    Program         Program        Program
       │               │                │
-θ_pitch_cmd      φ_roll_cmd      θ_velocity_cmd
+  θ_pitch_cmd         |           θ_velocity_cmd
+  φ_roll_cmd          |
       │               │                │
       └───────────────┬────────────────┘
                       ▼
@@ -58,3 +60,7 @@ A rocket's pitch program (often paired with a roll program) is a pre-programmed 
                 Physics Engine
 
 ```
+
+### Powered Explicit Guidance (PEG)
+
+PEG is a technique for guiding rockets to their target orbits. It's called "Powered Explicit" because it models thrust acceleration (T / m) explicitly and solves for a thrust/steering profile needed to reach the target state.
