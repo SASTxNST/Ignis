@@ -16,10 +16,10 @@ import { pegGuidance } from "./peg/peg";
 import { MissionProfile } from "./mission";
 
 
-export function guidanceComputer (
+export function guidanceComputer(
     state: GuidanceState,
     mission: MissionProfile
-) : Vector2 {
+): Vector2 {
 
     const pitch = pitchProgram(state);
 
