@@ -138,7 +138,6 @@ export function validateTrajectory(run: SimulationRun): ValidationReport {
   let poweredWorstDrop = 0;
   let poweredDropTime = 0;
   let prevPoweredAlt = -Infinity;
-  let prevPoweredTime = 0;
   for (let i = 0; i <= apogeeIdx && i < telemetry.length; i++) {
     const s = telemetry[i];
     if (!isPowered(s)) continue;
@@ -152,7 +151,6 @@ export function validateTrajectory(run: SimulationRun): ValidationReport {
       }
     }
     prevPoweredAlt = y;
-    prevPoweredTime = s.time;
   }
   checks.push({
     name: "altitude rises monotonically during powered ascent",
