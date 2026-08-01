@@ -61,6 +61,6 @@ A rocket's pitch program (often paired with a roll program) is a pre-programmed 
 
 ```
 
-### Power Explicit Guidance (PEG)
+### Powered Explicit Guidance (PEG)
 
-PEG is a technique for guiding rockets to their target orbits. It's called "Power Explicit" because it uses the power-square law of rocket propulsion (T² / m ∝ dv/dt) to directly solve for the thrust profile needed to reach the target state.
+PEG is a technique for guiding rockets to their target orbits. It's called "Powered Explicit" because it models thrust acceleration (T / m) explicitly and solves for a thrust/steering profile needed to reach the target state.
