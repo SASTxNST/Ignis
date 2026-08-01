@@ -54,11 +54,7 @@ export function dot(
 
 ): number {
 
-    return(
-
-        a.x * b.x + a.y * b.y
-
-    )
+    return a.x * b.x + a.y * b.y;
 }
 
 export function cross(
