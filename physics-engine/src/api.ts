@@ -179,6 +179,13 @@ function validateStage(
   } else {
     let prevTime = -Infinity;
     let maxTime = -Infinity;
+
+    // Require the curve to start at t=0 so thrust at ignition is well-defined.
+    const firstPt = curve[0] as Record<string, unknown>;
+    if (firstPt && isFiniteNumber(firstPt.time) && (firstPt.time as number) > 1e-6) {
+      err(`${prefix}.thrustCurve`, "Thrust curve must start at time 0 (include a point at t=0).");
+    }
+
     for (let k = 0; k < curve.length; k++) {
       const pt = curve[k] as Record<string, unknown>;
       const fieldBase = `${prefix}.thrustCurve[${k}]`;
@@ -189,11 +196,15 @@ function validateStage(
       if (!isFiniteNumber(pt.time) || (pt.time as number) < 0) {
         err(`${fieldBase}.time`, "'time' must be a finite number >= 0 (s since ignition).");
       } else {
-        if ((pt.time as number) < prevTime) {
-          err(`${fieldBase}.time`, "Thrust-curve times must be strictly non-decreasing.");
+        const t = pt.time as number;
+        if (t < prevTime) {
+          err(`${fieldBase}.time`, "Thrust-curve times must be non-decreasing.");
         }
-        prevTime = pt.time as number;
-        maxTime = Math.max(maxTime, pt.time as number);
+        if (isFiniteNumber(burnTime) && t > (burnTime as number) + 1e-6) {
+          err(`${fieldBase}.time`, `'time' must be <= burnTime (${burnTime}s).`);
+        }
+        prevTime = t;
+        maxTime = Math.max(maxTime, t);
       }
       if (!isFiniteNumber(pt.thrust) || (pt.thrust as number) < 0) {
         err(`${fieldBase}.thrust`, "'thrust' must be a finite number >= 0 (N).");
