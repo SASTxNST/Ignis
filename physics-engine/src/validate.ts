@@ -9,6 +9,8 @@ import { LVM3 } from "./presets/lvm3";
 export { theoreticalDeltaV } from "./deltaV";
 import { theoreticalDeltaV } from "./deltaV";
 
+import { validateWindModel } from "./tests/windValidation";
+
 // -----------------------------------------------------------
 // Phase 7 validation harness
 //
@@ -450,4 +452,6 @@ function main(): void {
 if (typeof require !== "undefined" && typeof module !== "undefined" && require.main === module) {
   main();
 }
+
+validateWindModel();
 
