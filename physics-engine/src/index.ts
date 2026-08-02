@@ -61,3 +61,11 @@ export { DEFAULT_SIMULATION_OPTIONS } from "./types";
  * new code should call simulateRocket() (which validates the config first).
  */
 export { simulate } from "./integrator";
+
+
+export { getWind } from "./wind";
+
+export type {
+  WindState,
+  WindLayer,
+} from "./types";

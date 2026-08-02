@@ -201,6 +201,39 @@ export interface AtmosphericState {
 // 8. Simulation Events & Results
 // -----------------------------------------------------------
 
+// -----------------------------------------------------------
+// Wind
+// -----------------------------------------------------------
+
+export interface WindState {
+
+  /** Horizontal wind velocity (m/s) */
+  velocity: Vector2;
+
+  /** Magnitude (m/s) */
+  speed: number;
+
+  /** Direction (degrees) */
+  directionDeg: number;
+
+}
+
+export interface WindLayer {
+
+  minAltitude: number;
+
+  maxAltitude: number;
+
+  speed: number;
+
+  directionDeg: number;
+
+}
+
+
+
+
+
 export type StageEventType =
   | "ignition"
   | "burnout"
@@ -277,3 +310,12 @@ export const DEFAULT_SIMULATION_OPTIONS: SimulationOptions = {
   solverAbsoluteTolerance: 1e-9,
   telemetryRecordStride: 10,
 };
+
+
+export enum WindModelType {
+    NONE = "none",
+    CONSTANT = "constant",
+    LAYERED = "layered",
+    NOAA = "noaa",
+    TURBULENT = "turbulent",
+}
