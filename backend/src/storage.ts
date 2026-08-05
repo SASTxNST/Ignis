@@ -7,9 +7,18 @@ export interface StoredSimulationRun {
   run: SimulationRun;
 }
 
+/**
+ * In-memory simulation run store.
+ *
+ * @note This is a development-only store. All data is lost on server restart.
+ *       It is capped at MAX_HISTORY_SIZE runs (oldest evicted first). Before
+ *       production deployment this should be replaced with a persistent
+ *       database layer (e.g. SQLite via Prisma or PostgreSQL).
+ */
 const MAX_HISTORY_SIZE = 50;
 const runsStore = new Map<string, StoredSimulationRun>();
 const historyList: string[] = [];
+
 
 export function saveSimulationRun(run: SimulationRun): StoredSimulationRun {
   const runId = `run_${Date.now()}_${randomUUID().slice(0, 8)}`;

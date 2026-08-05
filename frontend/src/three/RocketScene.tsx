@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { SimulationState } from "@ignis/physics-engine";
+import { RocketState } from "@ignis/physics-engine";
 
 interface RocketSceneProps {
-  telemetry: SimulationState[];
-  
+  telemetry: RocketState[];
   frameIndex: number;
 }
+
 
 
 const WORLD_SCALE = 1 / 500; // 500 world-meters per simulated meter of altitude

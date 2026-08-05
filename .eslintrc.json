@@ -1,0 +1,39 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react-hooks"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true
+  },
+  "rules": {
+    // Disallow `any` — use `unknown` instead at trust boundaries
+    "@typescript-eslint/no-explicit-any": "error",
+
+    // Unused variables should be prefixed with _ to signal intent
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
+
+    // Prefer explicit return types on exported functions (helps with API surfaces)
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+
+    // Enforce hooks rules (exhaustive deps, order)
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+
+    // Prefer const over let where possible
+    "prefer-const": "error",
+
+    // No console.log in production code (use console.error/warn intentionally)
+    "no-console": ["warn", { "allow": ["warn", "error", "log"] }]
+  },
+  "ignorePatterns": ["dist/", "node_modules/", "*.js"]
+}

@@ -1,4 +1,4 @@
-import { RocketConfig, SimulationRun } from "@Ignis/physics-engine";
+import { RocketConfig, SimulationRun } from "@ignis/physics-engine";
 
 const BASE = "/api";
 

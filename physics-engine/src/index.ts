@@ -1,26 +1,26 @@
 // ============================================================
-// Ignis Physics Engine — Public API (Phase 11)
+// Ignis Physics Engine — Public API
 //
-// This module is consumed by the rest of the Ignis platform (backend routes,
-// frontend, mission planning). It intentionally exposes ONLY:
+// This module is the SINGLE entry point the rest of the Ignis platform
+// (backend routes, frontend, mission planning) should consume.
 //
-//   Behaviours:
-//     simulateRocket(config, options?) -> SimulationRun   <- main entry point
-//     validateRocket(config)          -> ValidationResult  <- pre-flight check
-//     validateTrajectory(run)         -> ValidationReport  <- shape sanity
-//     theoreticalDeltaV(config)       -> number            <- ideal delta-V
-//     PRESETS                          -> built-in vehicles
+// Exposed behaviours:
+//   simulateRocket(config, options?) → SimulationRun    ← main entry point
+//   validateRocket(config)          → ValidationResult  ← pre-flight check
+//   validateTrajectory(run)         → ValidationReport  ← post-flight sanity
+//   theoreticalDeltaV(config)       → number            ← ideal Δv budget
+//   PRESETS                         → built-in vehicles
 //
-//   Types:
-//     RocketConfig, StageConfig, ThrustCurvePoint, DragCoefficientPoint,
-//     PropulsionType, SimulationOptions, SimulationRun, RocketState,
-//     StageEvent, StageEventType, SimulationOutcome, Vector2,
-//     ConfigValidationError, ValidationResult, ValidationReport
+// Exposed types:
+//   RocketConfig, StageConfig, ThrustCurvePoint, DragCoefficientPoint,
+//   PropulsionType, SimulationOptions, SimulationRun, RocketState,
+//   StageEvent, StageEventType, SimulationOutcome, Vector2,
+//   ConfigValidationError, ValidationResult, ValidationReport
 //
 // Internal physics (getStateDerivative, integrateSpan, getDrag, getThrust,
 // getGravity, getAtmosphere, the guidance computer, and the validation-suite
-// harness) are deliberately NOT exported — they are implementation details.
-// The ODE forces and solver live behind simulateRocket.
+// harness) are NOT exported — they are implementation details behind
+// simulateRocket. Consuming code should never need to reach inside.
 // ============================================================
 
 // --- Public behaviours ---
@@ -53,19 +53,9 @@ export type {
 } from "./types";
 export { DEFAULT_SIMULATION_OPTIONS } from "./types";
 
-// --- Event / metric enum-like values used by consumers ---
-
-/**
- * @deprecated Use simulateRocket(). `simulate` is the Phase 7 internal entry
- * point kept as a transitional alias so existing backend code keeps compiling;
- * new code should call simulateRocket() (which validates the config first).
- */
-export { simulate } from "./integrator";
-
-
+// --- Wind model (experimental) ---
+// The layered wind model is implemented but not yet integrated into the main
+// simulation loop. These exports are @experimental and subject to change.
+// Do not depend on them in production code.
 export { getWind } from "./wind";
-
-export type {
-  WindState,
-  WindLayer,
-} from "./types";
+export type { WindState, WindLayer } from "./types";

@@ -1,17 +1,32 @@
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from "recharts";
-import { SimulationState, StageEvent } from "@ignis/physics-engine";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  ReferenceLine,
+} from "recharts";
+import { RocketState, StageEvent } from "@ignis/physics-engine";
 import { EVENT_META, findFrameIndexForTime } from "../lib/events";
 import InfoTooltip from "./InfoTooltip";
 import { EDUCATION_COPY } from "../lib/education";
 
 interface TelemetryDashboardProps {
-  telemetry: SimulationState[];
+  telemetry: RocketState[];
   frameIndex: number;
   events: StageEvent[];
   onSelectEvent: (frameIndex: number) => void;
 }
 
-function Readout({ label, value, unit }: { label: string; value: string; unit: string }) {
+interface ReadoutProps {
+  label: string;
+  value: string;
+  unit: string;
+}
+
+function Readout({ label, value, unit }: ReadoutProps) {
   return (
     <div className="readout">
       <div className="readout-label">{label}</div>
@@ -21,7 +36,6 @@ function Readout({ label, value, unit }: { label: string; value: string; unit: s
     </div>
   );
 }
-
 
 function EventMarkers({ events }: { events: StageEvent[] }) {
   return (
@@ -42,31 +56,49 @@ function EventMarkers({ events }: { events: StageEvent[] }) {
   );
 }
 
-export default function TelemetryDashboard({ telemetry, frameIndex, events, onSelectEvent }: TelemetryDashboardProps) {
+export default function TelemetryDashboard({
+  telemetry,
+  frameIndex,
+  events,
+  onSelectEvent,
+}: TelemetryDashboardProps) {
   const frame = telemetry[frameIndex];
+
   const chartData = telemetry.map((f) => ({
     time: Math.round(f.time),
     altitudeKm: f.position.y / 1000,
     velocityMs: Math.hypot(f.velocity.x, f.velocity.y),
   }));
 
-  if (!frame) return <div className="telemetry-dashboard">No telemetry yet — run a simulation.</div>;
+  if (!frame) {
+    return (
+      <div className="telemetry-dashboard">No telemetry yet — run a simulation.</div>
+    );
+  }
 
   const speed = Math.hypot(frame.velocity.x, frame.velocity.y);
+
+  // propellantMassRemaining is the correct field on RocketState (replaces old fuelRemainingKg)
+  const initialFrame = telemetry[0];
   const fuelPct =
-    telemetry[0]?.fuelRemainingKg && frame.fuelRemainingKg != null
-      ? ((frame.fuelRemainingKg / (telemetry[0].fuelRemainingKg || 1)) * 100).toFixed(0)
+    initialFrame?.propellantMassRemaining != null && initialFrame.propellantMassRemaining > 0
+      ? ((frame.propellantMassRemaining / initialFrame.propellantMassRemaining) * 100).toFixed(0)
       : "—";
+
+  // thrustMagnitude is in Newtons — convert to kN for display
+  const thrustKN = (frame.thrustMagnitude / 1000).toFixed(1);
 
   return (
     <div className="telemetry-dashboard">
       <div className="readout-grid">
-        <Readout label="Altitude" value={(frame.position.y / 1000).toFixed(2)} unit="km" />
-        <Readout label="Velocity" value={speed.toFixed(0)} unit="m/s" />
-        <Readout label="Thrust" value={frame.thrustKN.toFixed(1)} unit="kN" />
-        <Readout label="Fuel (active stage)" value={fuelPct} unit="%" />
-        <Readout label="Active stage" value={String(frame.activeStageIndex + 1)} unit="" />
-        <Readout label="Mission time" value={frame.time.toFixed(1)} unit="s" />
+        <Readout label="Altitude"          value={(frame.position.y / 1000).toFixed(2)} unit="km" />
+        <Readout label="Velocity"          value={speed.toFixed(0)}                     unit="m/s" />
+        <Readout label="Thrust"            value={thrustKN}                             unit="kN" />
+        <Readout label="Mach"              value={frame.machNumber.toFixed(2)}          unit="" />
+        <Readout label="Dyn. pressure"     value={(frame.dynamicPressure / 1000).toFixed(1)} unit="kPa" />
+        <Readout label="Fuel (active stg)" value={fuelPct}                             unit="%" />
+        <Readout label="Active stage"      value={String(frame.activeStageIndex + 1)}  unit="" />
+        <Readout label="Mission time"      value={frame.time.toFixed(1)}               unit="s" />
       </div>
 
       <div className="chart-block">
@@ -114,7 +146,8 @@ export default function TelemetryDashboard({ telemetry, frameIndex, events, onSe
                   >
                     <span className="launch-log-dot" style={{ background: meta.color }} />
                     <span className="launch-log-text">
-                      Stage {event.stageIndex + 1} — {meta.label}
+                      {event.stageIndex >= 0 ? `Stage ${event.stageIndex + 1} — ` : ""}
+                      {meta.label}
                     </span>
                     <span className="launch-log-time">T+{event.time.toFixed(1)}s</span>
                   </button>

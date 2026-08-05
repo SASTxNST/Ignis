@@ -24,8 +24,8 @@ export default function Countdown({ onComplete }: CountdownProps) {
     }
     const timer = window.setTimeout(() => setStep((s) => s - 1), STEP_MS);
     return () => window.clearTimeout(timer);
-    
-  }, [step]);
+  }, [step, onComplete]);
+
 
   const label = labelFor(step);
   const isFinal = step <= 0;
